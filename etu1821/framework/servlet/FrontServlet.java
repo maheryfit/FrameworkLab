@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 
 public class FrontServlet extends HttpServlet {
+    private HashMap<String, Mapping> mappingUrls;
     public void init() {
     }
 
