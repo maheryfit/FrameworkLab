@@ -1,6 +1,6 @@
 package etu1821.servlet;
 
-public class Mapping {
+public final class Mapping {
     private String className;
     private String method;
 
@@ -20,6 +20,8 @@ public class Mapping {
         this.method = method;
     }
 
-    public Mapping() {
+    public Mapping(String className, String method) {
+        this.setClassName(className);
+        this.setMethod(method);
     }
 }
