@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 @MultipartConfig
 public final class FrontServlet extends HttpServlet {
     private HashMap<String, Mapping> mappingUrls;
@@ -30,7 +29,8 @@ public final class FrontServlet extends HttpServlet {
             for (Method method : methods) {
                 Annotation annotation = method.getAnnotation(Url.class);
                 if (annotation != null) {
-                   annotatedMethods.put(method.getAnnotation(Url.class).value(), new Mapping(cls.getName(), method.getName()));
+                    annotatedMethods.put(method.getAnnotation(Url.class).value(),
+                            new Mapping(cls.getName(), method.getName()));
                 }
             }
         }
@@ -48,9 +48,10 @@ public final class FrontServlet extends HttpServlet {
         }
     }
 
-    private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException, ClassNotFoundException {
+    private void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ClassNotFoundException {
         PrintWriter out = response.getWriter();
-        for (Map.Entry<String, Mapping> map: mappingUrls.entrySet()) {
+        for (Map.Entry<String, Mapping> map : mappingUrls.entrySet()) {
             out.println(map.getKey() + " " + map.getValue().getMethod());
         }
     }
@@ -65,7 +66,8 @@ public final class FrontServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         try {
             processRequest(request, response);
         } catch (ClassNotFoundException e) {
