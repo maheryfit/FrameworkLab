@@ -8,7 +8,7 @@
         <servlet-class>etu1821.framework.servlet.FrontServlet</servlet-class>
         <init-param>
             <param-name>packageName</param-name>
-            <param-value>etu1821</param-value>
+            <param-value>mg</param-value>
             <description>Nom du package source</description>
         </init-param>
     </servlet>
