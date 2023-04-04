@@ -7,7 +7,9 @@ public class Emp {
     @Url({ "/", "" })
     public ModelView getAll() {
         ModelView modele = new ModelView("test.jsp");
-        modele.addItem("Nom", "Jean");
+        modele.addItem("Nom", "Jean")
+                .addItem("Prenom", "Mahery")
+                .addItem("Age", 18);
         return modele;
     }
 
