@@ -68,6 +68,13 @@ public final class FrontServlet extends HttpServlet {
         if (object instanceof ModelView) {
             System.out.println(object.getClass().getName());
             ModelView modelView = (ModelView) object;
+            if (modelView.getData() instanceof HashMap<?, ?>) {
+                modelView.getData().forEach((key, value) -> {
+                    request.setAttribute(key, value);
+                });
+            } else {
+                throw new IllegalArgumentException("The field data must be an instance of HashMap<String, Object>");
+            }
             request.getRequestDispatcher("/" + modelView.getView()).forward(request, response);
         }
     }

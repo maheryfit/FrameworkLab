@@ -1,1 +1,1 @@
-test mandeha
+Coucou <%= request.getAttribute("Nom")%>
