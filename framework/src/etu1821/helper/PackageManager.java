@@ -6,11 +6,17 @@ package etu1821.helper;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
 
+import etu1821.annotation.Url;
+import etu1821.servlet.Mapping;
+
 public final class PackageManager {
-    public static List<Class<?>> getClassesInMyApplication(String packageName) throws ClassNotFoundException, IOException {
+    public static List<Class<?>> getClassesInMyApplication(String packageName)
+            throws ClassNotFoundException, IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String path = packageName.replace('.', '/');
         Enumeration<URL> resources = classLoader.getResources(path);
@@ -24,6 +30,22 @@ public final class PackageManager {
             classes.addAll(findClasses(directory, packageName));
         }
         return classes;
+    }
+
+    public static Object getObjectFromMapping(Mapping mapping)
+            throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+            NoSuchMethodException, InstantiationException {
+        Method method = null;
+        Class<?> clazz = Class.forName(mapping.getClassName());
+        System.out.println(clazz.getName());
+        Object cl = clazz.getConstructor().newInstance();
+        List<Method> methods = Arrays.asList(cl.getClass().getDeclaredMethods());
+        method = methods.stream()
+                .filter(mtd -> mtd.isAnnotationPresent(Url.class)
+                        && mtd.getName().equals(mapping.getMethod()))
+                .findFirst().get();
+        Object o = method.invoke(cl);
+        return o;
     }
 
     private static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {

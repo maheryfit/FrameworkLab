@@ -3,18 +3,19 @@ package etu1821.framework.servlet;
 import etu1821.annotation.Url;
 import etu1821.helper.PackageManager;
 import etu1821.servlet.Mapping;
+import etu1821.servlet.ModelView;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.annotation.MultipartConfig;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Arrays;
 
 @MultipartConfig
 public final class FrontServlet extends HttpServlet {
@@ -29,8 +30,10 @@ public final class FrontServlet extends HttpServlet {
             for (Method method : methods) {
                 Annotation annotation = method.getAnnotation(Url.class);
                 if (annotation != null) {
-                    annotatedMethods.put(method.getAnnotation(Url.class).value(),
-                            new Mapping(cls.getName(), method.getName()));
+                    List<String> values = Arrays.asList(method.getAnnotation(Url.class).value());
+                    for (String value : values) {
+                        annotatedMethods.put(value, new Mapping(cls.getName(), method.getName()));
+                    }
                 }
             }
         }
@@ -48,11 +51,24 @@ public final class FrontServlet extends HttpServlet {
         }
     }
 
+    private String getURI(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String path = uri.substring(contextPath.length());
+        return path;
+    }
+
     private void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ClassNotFoundException {
-        PrintWriter out = response.getWriter();
-        for (Map.Entry<String, Mapping> map : mappingUrls.entrySet()) {
-            out.println(map.getKey() + " " + map.getValue().getMethod());
+            throws IOException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException,
+            InvocationTargetException, NoSuchMethodException, InstantiationException, ServletException {
+        String path = getURI(request);
+        System.out.println(path);
+        Mapping map = this.mappingUrls.get(path);
+        Object object = PackageManager.getObjectFromMapping(map);
+        if (object instanceof ModelView) {
+            System.out.println(object.getClass().getName());
+            ModelView modelView = (ModelView) object;
+            request.getRequestDispatcher("/" + modelView.getView()).forward(request, response);
         }
     }
 
@@ -60,7 +76,8 @@ public final class FrontServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException
+                | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
@@ -70,7 +87,8 @@ public final class FrontServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException
+                | IllegalArgumentException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
