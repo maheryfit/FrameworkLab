@@ -8,4 +8,9 @@ public class Emp {
     public ModelView getAll() {
         return new ModelView("test.jsp");
     }
+
+    @Url({ "/index", "/id" })
+    public ModelView getId() {
+        return new ModelView("default.jsp");
+    }
 }

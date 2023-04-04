@@ -66,6 +66,7 @@ public final class FrontServlet extends HttpServlet {
         Mapping map = this.mappingUrls.get(path);
         Object object = PackageManager.getObjectFromMapping(map);
         if (object instanceof ModelView) {
+            System.out.println(object.getClass().getName());
             ModelView modelView = (ModelView) object;
             request.getRequestDispatcher("/" + modelView.getView()).forward(request, response);
         }
