@@ -1,1 +1,1 @@
-test mandeha
+Coucou <%= request.getAttribute("Nom")%> <%= request.getAttribute("Prenom")%> qui a <%= request.getAttribute("Age")%>

@@ -6,7 +6,11 @@ import etu1821.servlet.ModelView;
 public class Emp {
     @Url({ "/", "" })
     public ModelView getAll() {
-        return new ModelView("test.jsp");
+        ModelView modele = new ModelView("test.jsp");
+        modele.addItem("Nom", "Jean")
+                .addItem("Prenom", "Mahery")
+                .addItem("Age", 18);
+        return modele;
     }
 
     @Url({ "/index", "/id" })
