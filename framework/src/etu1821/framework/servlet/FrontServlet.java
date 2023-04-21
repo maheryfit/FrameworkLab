@@ -21,6 +21,11 @@ import java.util.Arrays;
 public final class FrontServlet extends HttpServlet {
     private HashMap<String, Mapping> mappingUrls;
 
+    /**
+     * 
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     private void setMappingUrls() throws IOException, ClassNotFoundException {
         HashMap<String, Mapping> annotatedMethods = new HashMap<>();
         String packageName = this.getInitParameter("packageName");
@@ -51,6 +56,11 @@ public final class FrontServlet extends HttpServlet {
         }
     }
 
+    /**
+     * 
+     * @param request
+     * @return
+     */
     private String getURI(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
@@ -58,25 +68,49 @@ public final class FrontServlet extends HttpServlet {
         return path;
     }
 
+    /**
+     * 
+     * @param request
+     * @param response
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     * @throws InvocationTargetException
+     * @throws NoSuchMethodException
+     * @throws InstantiationException
+     * @throws ServletException
+     */
     private void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException, InstantiationException, ServletException {
         String path = getURI(request);
-        System.out.println(path);
         Mapping map = this.mappingUrls.get(path);
-        Object object = PackageManager.getObjectFromMapping(map);
+        Object object = PackageManager.getObjectFromMappingUsingMethod(map, request);
         if (object instanceof ModelView) {
-            System.out.println(object.getClass().getName());
             ModelView modelView = (ModelView) object;
-            if (modelView.getData() instanceof HashMap<?, ?>) {
-                modelView.getData().forEach((key, value) -> {
-                    request.setAttribute(key, value);
-                });
-            } else {
-                throw new IllegalArgumentException("The field data must be an instance of HashMap<String, Object>");
-            }
-            request.getRequestDispatcher("/" + modelView.getView()).forward(request, response);
+            sendDataToView(request, response, modelView);
         }
+    }
+
+    /**
+     * 
+     * @param request
+     * @param response
+     * @param modelView
+     * @throws ServletException
+     * @throws IOException
+     */
+    private void sendDataToView(HttpServletRequest request, HttpServletResponse response, ModelView modelView)
+            throws ServletException, IOException {
+        if (modelView.getData() instanceof HashMap<?, ?>) {
+            modelView.getData().forEach((key, value) -> {
+                request.setAttribute(key, value);
+            });
+        } else {
+            throw new IllegalArgumentException("The field data must be an instance of HashMap<String, Object>");
+        }
+        request.getRequestDispatcher("/" + modelView.getView()).forward(request, response);
     }
 
     @Override
