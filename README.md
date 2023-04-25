@@ -7,7 +7,7 @@
   <li>JDK supérieur ou égale à JDK-17</li>
   <li>Mettre toutes les classes sous un seul package qui va être la racine</li>
   <li>Dans le fichier web.xml:
-    <code>
+    ```
        <servlet>
         <servlet-name>FrontServlet</servlet-name>
         <servlet-class>etu1821.framework.servlet.FrontServlet</servlet-class>
@@ -21,6 +21,6 @@
           <servlet-name>FrontServlet</servlet-name>
           <url-pattern>/</url-pattern>
       </servlet-mapping>
-    </code>
+    ```
   </li>
 </ul>
