@@ -13,7 +13,7 @@
           &lt;servlet-class&gt;etu1821.framework.servlet.FrontServlet&lt;/servlet-class&gt;
           &lt;init-param&gt;
               &lt;param-name&gt;packageName&gt;/param-name&gt;
-              &lt;param-value&gt;nom du package racine&gt;/param-value&gt;
+              &lt;param-value&gt;nom du package racine&lt;/param-value&gt;
               &lt;description&gt;Nom du package source&lt;/description&gt;
           &lt;/init-param&gt;
       &lt;/servlet&gt;
