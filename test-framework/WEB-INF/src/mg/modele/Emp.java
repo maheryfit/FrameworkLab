@@ -10,16 +10,8 @@ public class Emp {
         return id;
     }
 
-    private void setId(int id) {
+    public void setId(int id) {
         this.id = id;
-    }
-
-    public void setId(String id) {
-        try {
-            setId(Integer.parseInt(id.trim()));
-        } catch (NumberFormatException e) {
-            System.out.println("Error: " + e.getMessage());
-        }
     }
 
     @Url({ "/", "" })

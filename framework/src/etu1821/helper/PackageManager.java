@@ -15,6 +15,9 @@ import java.util.*;
 import etu1821.annotation.Url;
 import etu1821.servlet.Mapping;
 import jakarta.servlet.http.HttpServletRequest;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 
 public final class PackageManager {
 
@@ -89,23 +92,29 @@ public final class PackageManager {
         request.getParameterNames().asIterator().forEachRemaining(name -> {
             if (isFieldExistsInClass(object.getClass(), name)) {
                 try {
-                    object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(name),
-                            String.class).invoke(object, request.getParameter(name));
-                    System.out.println(
-                            object.getClass().getDeclaredMethod("get" + capitalizeFirstLetter(name))
-                                    .invoke(object));
+                    Field field = getFieldExistsInClass(object.getClass(), name);
+                    if (request.getParameter(name).equals("")) {
+                        throw new IllegalArgumentException("You must enter something in the input " + name,
+                                new Throwable("Input " + name + " contains nothing"));
+                    }
+                    Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(name),
+                            field.getType());
+                    castingInputValue(request, field, name, method, object);
                 } catch (NoSuchMethodException | SecurityException e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 } catch (IllegalArgumentException e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                } catch (NoSuchFieldException e) {
+                    // TODO Auto-generated catch block
+                    throw new RuntimeException(e);
+                } catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    throw new RuntimeException(e);
                 } catch (InvocationTargetException e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
             }
         });
@@ -115,15 +124,67 @@ public final class PackageManager {
      * 
      * @param cl
      * @param nameField
-     * @return
+     * @return True or False
      */
-    public static boolean isFieldExistsInClass(Class<?> cl, String nameField) {
+    private static boolean isFieldExistsInClass(Class<?> cl, String nameField) {
         try {
             Field field = cl.getDeclaredField(nameField);
             return field != null;
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * 
+     * @param request
+     * @param field
+     * @param name
+     * @param method
+     * @param object
+     * @throws NumberFormatException
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     * @throws InvocationTargetException
+     */
+    private static void castingInputValue(HttpServletRequest request, Field field, String name, Method method,
+            Object object)
+            throws NumberFormatException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        if (field.getType().getSimpleName().equals("int")
+                || field.getType().getSimpleName().equals("Integer")) {
+            method.invoke(object, Integer.parseInt(request.getParameter(name).trim()));
+        } else if (field.getType().getSimpleName().equals("double")
+                || field.getType().getSimpleName().equals("Double")) {
+            method.invoke(object, Double.parseDouble(request.getParameter(name).trim()));
+        } else if (field.getType().getSimpleName().equals("float")
+                || field.getType().getSimpleName().equals("Float")) {
+            method.invoke(object, Float.parseFloat(request.getParameter(name).trim()));
+        } else if (field.getType().getSimpleName().equals("long")
+                || field.getType().getSimpleName().equals("Long")) {
+            method.invoke(object, Long.parseLong(request.getParameter(name).trim()));
+        } else if (field.getType().getSimpleName().equals("String")) {
+            method.invoke(object, request.getParameter(name).trim());
+        } else if (field.getType().getSimpleName().equals("Date")) {
+            method.invoke(object, Date.valueOf(request.getParameter(name).trim()));
+        } else if (field.getType().getSimpleName().equals("Time")) {
+            method.invoke(object, Time.valueOf(request.getParameter(name).trim()));
+        } else if (field.getType().getSimpleName().equals("Timestamp")) {
+            method.invoke(object, Timestamp.valueOf(request.getParameter(name).trim()));
+        }
+    }
+
+    /**
+     * 
+     * @param cl
+     * @param nameField
+     * @return
+     * @throws SecurityException
+     * @throws NoSuchFieldException
+     */
+    private static Field getFieldExistsInClass(Class<?> cl, String nameField)
+            throws NoSuchFieldException, SecurityException {
+        Field field = cl.getDeclaredField(nameField);
+        return field;
     }
 
     /**
