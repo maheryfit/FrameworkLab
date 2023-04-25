@@ -7,22 +7,20 @@
   <li>JDK supérieur ou égale à JDK-17</li>
   <li>Mettre toutes les classes sous un seul package qui va être la racine</li>
   <li>Dans le fichier web.xml:
-      <pre>
-        <code>
-           &lt;servlet&gt;
-                &lt;servlet-name&gt;FrontServlet&lt;/servlet-name&gt;
-                &lt;servlet-class&gt;etu1821.framework.servlet.FrontServlet&lt;/servlet-class&gt;
-                &lt;init-param&gt;
-                    &lt;param-name&gt;packageName&gt;/param-name&gt;
-                    &lt;param-value&gt;nom du package racine&gt;/param-value&gt;
-                    &lt;description&gt;Nom du package source&lt;/description&gt;
-                &lt;/init-param&gt;
-            &lt;/servlet&gt;
-            &lt;servlet-mapping&gt;
-                &lt;servlet-name&gt;FrontServlet&lt;/servlet-name&gt;
-                &lt;url-pattern&gt;/&lt;/url-pattern&gt;
-            &lt;/servlet-mapping&gt;
-         </code>
-       </pre>
+      <pre><code>
+      &lt;servlet&gt;
+          &lt;servlet-name&gt;FrontServlet&lt;/servlet-name&gt;
+          &lt;servlet-class&gt;etu1821.framework.servlet.FrontServlet&lt;/servlet-class&gt;
+          &lt;init-param&gt;
+              &lt;param-name&gt;packageName&gt;/param-name&gt;
+              &lt;param-value&gt;nom du package racine&gt;/param-value&gt;
+              &lt;description&gt;Nom du package source&lt;/description&gt;
+          &lt;/init-param&gt;
+      &lt;/servlet&gt;
+      &lt;servlet-mapping&gt;
+          &lt;servlet-name&gt;FrontServlet&lt;/servlet-name&gt;
+          &lt;url-pattern&gt;/&lt;/url-pattern&gt;
+      &lt;/servlet-mapping&gt;
+       </code></pre>
   </li>
 </ul>
