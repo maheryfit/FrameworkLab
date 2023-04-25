@@ -26,5 +26,5 @@
 </ul>
 ## Méthode d'utilisation:
 <ul>
-  <li>La classe pour l'annotation des méthodes: Url(Ex: @Url("/") ou @Url({ "/", "" }))</li>
+  <li>La classe pour l'annotation des méthodes: Url(Ex: <pre><code>@Url("/")</code></pre> ou <pre><code>@Url({ "/", "" }))</code></pre></li>
 </ul>
