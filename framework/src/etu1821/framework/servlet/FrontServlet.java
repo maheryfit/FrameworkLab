@@ -80,10 +80,11 @@ public final class FrontServlet extends HttpServlet {
      * @throws NoSuchMethodException
      * @throws InstantiationException
      * @throws ServletException
+     * @throws Exception
      */
     private void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException,
-            InvocationTargetException, NoSuchMethodException, InstantiationException, ServletException {
+            InvocationTargetException, NoSuchMethodException, InstantiationException, ServletException, Exception {
         String path = getURI(request);
         Mapping map = this.mappingUrls.get(path);
         Object object = PackageManager.getObjectFromMappingUsingMethod(map, request);
@@ -114,11 +115,11 @@ public final class FrontServlet extends HttpServlet {
     }
 
     @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, IllegalArgumentException {
         try {
             processRequest(request, response);
-        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException
-                | IllegalArgumentException | InvocationTargetException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -128,8 +129,7 @@ public final class FrontServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             processRequest(request, response);
-        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException
-                | IllegalArgumentException | InvocationTargetException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
