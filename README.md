@@ -32,7 +32,16 @@
     Exemple:
     <pre><code>
      @Url("/test")
-     public ModelView test(@ParamName("id") int id, @ParamName("name") String nom) { }
+     public ModelView test(@ParamName("id") int id, @ParamName("name") String nom) { 
+       ...
+       ModeleView modelView = new ModelView("fichier.jsp");
+       modeleView.addItem("Nom", name)
+                .addItem("Prenom", "Mahery")
+                .addItem("id", id)
+                .addItem("Age", 18);
+       return modeleView;
+       ...
+     }
     </code></pre> 
     dans le paramètre du fonction  dans le package <pre><code>import etu1821.annotation.ParamName</code></pre></li>
 </ul>
