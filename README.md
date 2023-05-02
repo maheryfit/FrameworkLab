@@ -27,6 +27,6 @@
 <h2> Méthode d'utilisation:</h2>
 <ul>
   <li>Importer la classe <pre><code>import etu1821.servlet.ModelView</code></pre> pour récupérer la classe ModelView</li>
-  <li>La classe pour l'annotation des méthodes: Url(Toujours commencer par un /)<pre><code>@Url("/")</code></pre> ou <pre><code>@Url({ "/", "" })</code></pre> dans le package <pre><code>import etu1821.annotation.Url</code></pre></li>
+  <li>La classe pour l'annotation des méthodes: Url<pre><code>@Url("/")</code></pre> ou <pre><code>@Url({ "/", "" })</code></pre> dans le package <pre><code>import etu1821.annotation.Url</code></pre></li>
   <li>Pour récupérer une méthode de type GET: Utilisation de l'annotation <pre><code>@ParamName("[nom de l'attribut dans l'URL]")</code></pre> dans le paramètre du fonction  dans le package <pre><code>import etu1821.annotation.ParamName</code></pre></li>
 </ul>
