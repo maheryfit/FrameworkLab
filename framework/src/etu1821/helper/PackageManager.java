@@ -9,15 +9,20 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.util.*;
 
+import etu1821.annotation.ParamName;
 import etu1821.annotation.Url;
 import etu1821.servlet.Mapping;
 import jakarta.servlet.http.HttpServletRequest;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public final class PackageManager {
 
@@ -55,13 +60,14 @@ public final class PackageManager {
      * @throws InvocationTargetException
      * @throws NoSuchMethodException
      * @throws InstantiationException
+     * @throws Exception
      */
     public static Object getObjectFromMappingUsingMethod(Mapping mapping, HttpServletRequest request)
             throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-            NoSuchMethodException, InstantiationException {
+            NoSuchMethodException, InstantiationException, Exception {
         Method method = null;
         Object cl = getObjectFromMapping(mapping);
-        if (!request.getParameterMap().isEmpty()) {
+        if (!request.getParameterMap().isEmpty() && request.getMethod().toLowerCase().equals("post")) {
             sendDataToModel(request, cl);
         }
         List<Method> methods = Arrays.asList(cl.getClass().getDeclaredMethods());
@@ -69,8 +75,121 @@ public final class PackageManager {
                 .filter(mtd -> mtd.isAnnotationPresent(Url.class)
                         && mtd.getName().equals(mapping.getMethod()))
                 .findFirst().get();
-        Object o = method.invoke(cl);
+        Object o = null;
+        if (!request.getParameterMap().isEmpty() && request.getMethod().toLowerCase().equals("get")) {
+            o = treatMethodGet(request, method, cl);
+        } else {
+            try {
+                o = method.invoke(cl);
+            } catch (Exception e) {
+                o = method.invoke(cl, 0);
+            }
+        }
         return o;
+    }
+
+    /**
+     * 
+     * @param request
+     * @param method
+     * @param object
+     * @return
+     * @throws Exception
+     */
+    private static <T> Object treatMethodGet(HttpServletRequest request, Method method, Object object)
+            throws Exception {
+        LinkedList<T> paramValues = new LinkedList<>();
+        for (Parameter parameter : method.getParameters()) {
+            if (parameter.isAnnotationPresent(ParamName.class)) {
+                paramValues.add(adequatObjectForParameter(request, parameter, method));
+            } else {
+                throw new Exception(
+                        "You must annotated the argument of the method with the annotation ParamName",
+                        new Throwable("You forgot to annotate the argument of the method"));
+            }
+        }
+        return method.invoke(object, paramValues.toArray());
+    }
+
+    /**
+     * 
+     * @param request
+     * @param parameter
+     * @param method
+     * @return
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     * @throws InvocationTargetException
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T adequatObjectForParameter(HttpServletRequest request, Parameter parameter, Method method)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        if (request.getParameter(parameter.getAnnotation(ParamName.class).value()) == null) {
+            if (parameter.getType().getSimpleName().equals("int")
+                    || parameter.getType().getSimpleName().equals("Integer")
+                    || parameter.getType().getSimpleName().equals("Double")
+                    || parameter.getType().getSimpleName().equals("double")
+                    || parameter.getType().getSimpleName().equals("long")
+                    || parameter.getType().getSimpleName().equals("Long")
+                    || parameter.getType().getSimpleName().equals("float")
+                    || parameter.getType().getSimpleName().equals("Float")) {
+                return (T) (Number) 0;
+            }
+            return null;
+        }
+        T obj = null;
+        if (parameter.getType().getSimpleName().equals("int")
+                || parameter.getType().getSimpleName().equals("Integer")) {
+            obj = (T) (Integer) Integer
+                    .parseInt(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim());
+        } else if (parameter.getType().getSimpleName().equals("float")
+                || parameter.getType().getSimpleName().equals("Float")) {
+            obj = (T) (Float) Float
+                    .parseFloat(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim());
+        } else if (parameter.getType().getSimpleName().equals("Long")
+                || parameter.getType().getSimpleName().equals("long")) {
+            obj = (T) (Long) Long
+                    .parseLong(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim());
+        } else if (parameter.getType().getSimpleName().equals("double")
+                || parameter.getType().getSimpleName().equals("Double")) {
+            obj = (T) (Double) Double
+                    .parseDouble(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim());
+        } else if (parameter.getType().getSimpleName().equals("String")) {
+            obj = (T) (String) request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                    .trim();
+        } else if (parameter.getType().getSimpleName().equals("Date")) {
+            obj = (T) (Date) Date
+                    .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim());
+        } else if (parameter.getType().getSimpleName().equals("Time")) {
+            obj = (T) (Time) Time
+                    .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim());
+        } else if (parameter.getType().getSimpleName().equals("Timestamp")) {
+            obj = (T) (Timestamp) Timestamp
+                    .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim());
+        } else if (parameter.getType().getSimpleName().equals("LocalDate")) {
+            obj = (T) (LocalDate) Date
+                    .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim())
+                    .toLocalDate();
+        } else if (parameter.getType().getSimpleName().equals("LocalTime")) {
+            obj = (T) (LocalTime) Time
+                    .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim())
+                    .toLocalTime();
+        } else if (parameter.getType().getSimpleName().equals("LocalDateTime")) {
+            obj = (T) (LocalDateTime) Timestamp
+                    .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim())
+                    .toLocalDateTime();
+        }
+        return obj;
     }
 
     /**
@@ -122,13 +241,13 @@ public final class PackageManager {
 
     /**
      * 
-     * @param cl
+     * @param clazz
      * @param nameField
      * @return True or False
      */
-    private static boolean isFieldExistsInClass(Class<?> cl, String nameField) {
+    private static boolean isFieldExistsInClass(Class<?> clazz, String nameField) {
         try {
-            Field field = cl.getDeclaredField(nameField);
+            Field field = clazz.getDeclaredField(nameField);
             return field != null;
         } catch (Exception e) {
             return false;
@@ -170,6 +289,12 @@ public final class PackageManager {
             method.invoke(object, Time.valueOf(request.getParameter(name).trim()));
         } else if (field.getType().getSimpleName().equals("Timestamp")) {
             method.invoke(object, Timestamp.valueOf(request.getParameter(name).trim()));
+        } else if (field.getType().getSimpleName().equals("LocalDate")) {
+            method.invoke(object, Date.valueOf(request.getParameter(name).trim()).toLocalDate());
+        } else if (field.getType().getSimpleName().equals("LocalTime")) {
+            method.invoke(object, Time.valueOf(request.getParameter(name).trim()).toLocalTime());
+        } else if (field.getType().getSimpleName().equals("LocalDateTime")) {
+            method.invoke(object, Timestamp.valueOf(request.getParameter(name).trim()).toLocalDateTime());
         }
     }
 
