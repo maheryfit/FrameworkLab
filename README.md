@@ -28,10 +28,13 @@
 <ul>
   <li>Importer la classe <pre><code>import etu1821.servlet.ModelView;</code></pre> pour récupérer la classe ModelView</li>
   <li>La classe pour l'annotation des méthodes: Url<pre><code>@Url("/")</code></pre> ou <pre><code>@Url({ "/", "" })</code></pre> dans le package <pre><code>import etu1821.annotation.Url;</code></pre></li>
-  <li>Pour récupérer une méthode de type GET: Utilisation de l'annotation <pre><code>
-    @ParamName("[nom de l'attribut dans l'URL]")
+  <li>Pour récupérer une méthode de type GET: Utilisation de l'annotation 
+    Exemple:
+    <pre><code>
+    @Url("/test")
     public ModelView test(@ParamName("id") int id, @ParamName("name") String nom) {
      
     }
-    </code></pre> dans le paramètre du fonction  dans le package <pre><code>import etu1821.annotation.ParamName</code></pre></li>
+    </code></pre> 
+    dans le paramètre du fonction  dans le package <pre><code>import etu1821.annotation.ParamName</code></pre></li>
 </ul>
