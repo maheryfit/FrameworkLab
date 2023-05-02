@@ -82,7 +82,7 @@ public final class PackageManager {
             try {
                 o = method.invoke(cl);
             } catch (Exception e) {
-                o = method.invoke(cl, 0);
+                o = treatMethodGet(request, method, cl);
             }
         }
         return o;
