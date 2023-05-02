@@ -2,7 +2,7 @@
 ## Présenter par ETU 001821
 ## Contraintes d'utilisation du framework:
 <ul>
-  <li>Utilisation de apache tomcat 10.0.7</li>
+  <li>Utilisation de apache tomcat 10</li>
   <li>Classe HttpServlet dans le package jakarta</li>
   <li>JDK supérieur ou égale à JDK-17</li>
   <li>Mettre toutes les classes sous un seul package qui va être la racine</li>
@@ -31,8 +31,8 @@
   <li>Pour récupérer une méthode de type GET: Utilisation de l'annotation 
     Exemple:
     <pre><code>
-      @Url("/test")
-      public ModelView test(@ParamName("id") int id, @ParamName("name") String nom) { }
+     @Url("/test")
+     public ModelView test(@ParamName("id") int id, @ParamName("name") String nom) { }
     </code></pre> 
     dans le paramètre du fonction  dans le package <pre><code>import etu1821.annotation.ParamName</code></pre></li>
 </ul>
