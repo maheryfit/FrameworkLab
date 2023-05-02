@@ -26,9 +26,9 @@ public class Emp {
     }
 
     @Url({ "/index", "/ajouter" })
-    public ModelView getDefaultPage(@ParamName("id") int id) {
+    public ModelView getDefaultPage(@ParamName("id") int id, @ParamName("name") String name) {
         ModelView modele = new ModelView("default.jsp");
-        modele.addItem("Nom", "Jean")
+        modele.addItem("Nom", name)
                 .addItem("Prenom", "Mahery")
                 .addItem("id", id)
                 .addItem("Age", 18);

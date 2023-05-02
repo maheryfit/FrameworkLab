@@ -20,6 +20,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public final class PackageManager {
 
@@ -93,13 +96,19 @@ public final class PackageManager {
      * @return
      * @throws Exception
      */
-    private static Object treatMethodGet(HttpServletRequest request, Method method, Object object) throws Exception {
-        if (method.getParameters()[0].isAnnotationPresent(ParamName.class)) {
-            return adequatObjectForParameter(request, method.getParameters()[0], method, object);
+    private static <T> Object treatMethodGet(HttpServletRequest request, Method method, Object object)
+            throws Exception {
+        LinkedList<T> paramValues = new LinkedList<>();
+        for (Parameter parameter : method.getParameters()) {
+            if (parameter.isAnnotationPresent(ParamName.class)) {
+                paramValues.add(adequatObjectForParameter(request, parameter, method));
+            } else {
+                throw new Exception(
+                        "You must annotated the argument of the method with the annotation ParamName",
+                        new Throwable("You forgot to annotate the argument of the method"));
+            }
         }
-        throw new Exception(
-                "You must annotated the argument of the method with the annotation ParamName",
-                new Throwable("You forgot to annotate the argument of the method"));
+        return method.invoke(object, paramValues.toArray());
     }
 
     /**
@@ -107,61 +116,78 @@ public final class PackageManager {
      * @param request
      * @param parameter
      * @param method
-     * @param object
      * @return
      * @throws IllegalAccessException
      * @throws IllegalArgumentException
      * @throws InvocationTargetException
      */
-    private static Object adequatObjectForParameter(HttpServletRequest request, Parameter parameter, Method method,
-            Object object) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        Object obj = null;
+    @SuppressWarnings("unchecked")
+    private static <T> T adequatObjectForParameter(HttpServletRequest request, Parameter parameter, Method method)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        if (request.getParameter(parameter.getAnnotation(ParamName.class).value()) == null) {
+            if (parameter.getType().getSimpleName().equals("int")
+                    || parameter.getType().getSimpleName().equals("Integer")
+                    || parameter.getType().getSimpleName().equals("Double")
+                    || parameter.getType().getSimpleName().equals("double")
+                    || parameter.getType().getSimpleName().equals("long")
+                    || parameter.getType().getSimpleName().equals("Long")
+                    || parameter.getType().getSimpleName().equals("float")
+                    || parameter.getType().getSimpleName().equals("Float")) {
+                return (T) (Number) 0;
+            }
+            return null;
+        }
+        T obj = null;
         if (parameter.getType().getSimpleName().equals("int")
                 || parameter.getType().getSimpleName().equals("Integer")) {
-            obj = method.invoke(object, Integer
+            obj = (T) (Integer) Integer
                     .parseInt(request.getParameter(parameter.getAnnotation(ParamName.class).value())
-                            .trim()));
+                            .trim());
         } else if (parameter.getType().getSimpleName().equals("float")
                 || parameter.getType().getSimpleName().equals("Float")) {
-            obj = method.invoke(object, Float
+            obj = (T) (Float) Float
                     .parseFloat(request.getParameter(parameter.getAnnotation(ParamName.class).value())
-                            .trim()));
+                            .trim());
         } else if (parameter.getType().getSimpleName().equals("Long")
                 || parameter.getType().getSimpleName().equals("long")) {
-            obj = method.invoke(object, Long
+            obj = (T) (Long) Long
                     .parseLong(request.getParameter(parameter.getAnnotation(ParamName.class).value())
-                            .trim()));
-        } else if (parameter.getType().getSimpleName().equals("String")) {
-            obj = method.invoke(object,
-                    request.getParameter(parameter.getAnnotation(ParamName.class).value())
                             .trim());
+        } else if (parameter.getType().getSimpleName().equals("double")
+                || parameter.getType().getSimpleName().equals("Double")) {
+            obj = (T) (Double) Double
+                    .parseDouble(request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                            .trim());
+        } else if (parameter.getType().getSimpleName().equals("String")) {
+            obj = (T) (String) request.getParameter(parameter.getAnnotation(ParamName.class).value())
+                    .trim();
         } else if (parameter.getType().getSimpleName().equals("Date")) {
-            obj = method.invoke(object, Date
+            obj = (T) (Date) Date
                     .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
-                            .trim()));
+                            .trim());
         } else if (parameter.getType().getSimpleName().equals("Time")) {
-            obj = method.invoke(object, Time
+            obj = (T) (Time) Time
                     .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
-                            .trim()));
+                            .trim());
         } else if (parameter.getType().getSimpleName().equals("Timestamp")) {
-            obj = method.invoke(object, Timestamp
+            obj = (T) (Timestamp) Timestamp
                     .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
-                            .trim()));
+                            .trim());
         } else if (parameter.getType().getSimpleName().equals("LocalDate")) {
-            obj = method.invoke(object, Date
+            obj = (T) (LocalDate) Date
                     .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
                             .trim())
-                    .toLocalDate());
+                    .toLocalDate();
         } else if (parameter.getType().getSimpleName().equals("LocalTime")) {
-            obj = method.invoke(object, Time
+            obj = (T) (LocalTime) Time
                     .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
                             .trim())
-                    .toLocalTime());
+                    .toLocalTime();
         } else if (parameter.getType().getSimpleName().equals("LocalDateTime")) {
-            obj = method.invoke(object, Timestamp
+            obj = (T) (LocalDateTime) Timestamp
                     .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
                             .trim())
-                    .toLocalDateTime());
+                    .toLocalDateTime();
         }
         return obj;
     }
