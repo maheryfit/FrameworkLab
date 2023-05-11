@@ -3,6 +3,8 @@ jar cf fw.jar .
 move fw.jar ../../test-framework/WEB-INF/lib 
 cd ../../
 cd ./test-framework/
+xcopy * E:\Github\FrameworkLab\repository-send-webapp\WEB-INF\ /E /I /Y
+cd E:\Github\FrameworkLab\repository-send-webapp\
 jar cf test-framework.war .
 move test-framework.war ..
 cd ..
