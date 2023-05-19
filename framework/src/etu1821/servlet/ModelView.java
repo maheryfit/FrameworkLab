@@ -7,7 +7,7 @@ public class ModelView {
 
     private HashMap<String, Object> data;
 
-    private void setView(String view) {
+    public void setView(String view) {
         if (view.equals(""))
             throw new IllegalArgumentException("The view must be a filename", new Throwable("View equals to nothing"));
 
