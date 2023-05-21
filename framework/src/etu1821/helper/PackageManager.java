@@ -16,7 +16,10 @@ import java.util.*;
 import etu1821.annotation.ParamName;
 import etu1821.annotation.Url;
 import etu1821.servlet.Mapping;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -208,6 +211,7 @@ public final class PackageManager {
             throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException, SecurityException {
         // TODO
+        FileUploader fileUploader = new FileUploader();
         request.getParameterNames().asIterator().forEachRemaining(name -> {
             if (isFieldExistsInClass(object.getClass(), name)) {
                 try {
@@ -218,7 +222,11 @@ public final class PackageManager {
                     }
                     Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(name),
                             field.getType());
-                    castingInputValue(request, field, name, method, object);
+                    if (field.getType().isInstance(fileUploader)) {
+                        treatFileUpload(request.getPart(name), object, method);
+                    } else {
+                        castingInputValue(request, field, name, method, object);
+                    }
                 } catch (NoSuchMethodException | SecurityException e) {
                     // TODO Auto-generated catch block
                     throw new RuntimeException(e);
@@ -234,9 +242,32 @@ public final class PackageManager {
                 } catch (InvocationTargetException e) {
                     // TODO Auto-generated catch block
                     throw new RuntimeException(e);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    throw new RuntimeException(e);
+                } catch (ServletException e) {
+                    // TODO Auto-generated catch block
+                    throw new RuntimeException(e);
                 }
             }
         });
+    }
+
+    /**
+     * 
+     * @param part
+     * @param object
+     * @param method
+     * @throws InvocationTargetException
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
+     * @throws IOException
+     */
+    private static void treatFileUpload(Part part, Object object, Method method)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
+        FileUploader fileUploader = new FileUploader(part.getSubmittedFileName(), "",
+                part.getInputStream().readAllBytes());
+        method.invoke(object, fileUploader);
     }
 
     /**

@@ -1,11 +1,21 @@
 package mg.modele;
 
 import etu1821.annotation.Url;
+import etu1821.helper.FileUploader;
 import etu1821.servlet.ModelView;
 import etu1821.annotation.ParamName;
 
 public class Emp {
     private int id;
+    private FileUploader file;
+
+    public void setFileUpload(FileUploader file) {
+        this.file = file;
+    }
+
+    public FileUploader getFile() {
+        return file;
+    }
 
     public int getId() {
         return id;
