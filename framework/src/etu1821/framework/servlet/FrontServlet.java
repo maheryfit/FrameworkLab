@@ -5,10 +5,10 @@ import etu1821.helper.PackageManager;
 import etu1821.servlet.Mapping;
 import etu1821.servlet.ModelView;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.annotation.MultipartConfig;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -19,6 +19,8 @@ import java.util.Arrays;
 
 @MultipartConfig
 public final class FrontServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1273074928096412095L;
     private HashMap<String, Mapping> mappingUrls;
 
     /**
