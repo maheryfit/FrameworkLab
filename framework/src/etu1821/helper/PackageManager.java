@@ -206,51 +206,88 @@ public final class PackageManager {
      * @throws InvocationTargetException
      * @throws NoSuchMethodException
      * @throws SecurityException
+     * @throws ServletException
+     * @throws IOException
      */
     private static void sendDataToModel(HttpServletRequest request, Object object)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
-            InvocationTargetException, NoSuchMethodException, SecurityException {
+            InvocationTargetException, NoSuchMethodException, SecurityException, IOException, ServletException {
         // TODO
         FileUploader fileUploader = new FileUploader();
-        request.getParameterNames().asIterator().forEachRemaining(name -> {
-            if (isFieldExistsInClass(object.getClass(), name)) {
-                try {
-                    Field field = getFieldExistsInClass(object.getClass(), name);
-                    if (request.getParameter(name).equals("")) {
-                        throw new IllegalArgumentException("You must enter something in the input " + name,
-                                new Throwable("Input " + name + " contains nothing"));
+        boolean isMultipart = request.getContentType() != null
+                && request.getContentType().startsWith("multipart/form-data");
+        if (isMultipart) {
+            request.getParts().forEach(part -> {
+                String name = part.getName();
+                if (isFieldExistsInClass(object.getClass(), name)) {
+                    try {
+                        Field field = getFieldExistsInClass(object.getClass(), name);
+                        if (request.getPart(name).getName().equals("")) {
+                            throw new IllegalArgumentException("You must enter something in the input " + name,
+                                    new Throwable("Input " + name + " contains nothing"));
+                        }
+                        Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(name),
+                                field.getType());
+                        if (field.getType().isInstance(fileUploader)) {
+                            treatFileUpload(part, object, method);
+                        } else {
+                            castingInputValue(request, field, name, method, object);
+                        }
+                    } catch (NoSuchMethodException | SecurityException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (IllegalArgumentException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (NoSuchFieldException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (IllegalAccessException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (InvocationTargetException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (ServletException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
                     }
-                    Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(name),
-                            field.getType());
-                    if (field.getType().isInstance(fileUploader)) {
-                        treatFileUpload(request.getPart(name), object, method);
-                    } else {
-                        castingInputValue(request, field, name, method, object);
-                    }
-                } catch (NoSuchMethodException | SecurityException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
-                } catch (IllegalArgumentException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
-                } catch (NoSuchFieldException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
-                } catch (IllegalAccessException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
-                } catch (InvocationTargetException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
-                } catch (ServletException e) {
-                    // TODO Auto-generated catch block
-                    throw new RuntimeException(e);
                 }
-            }
-        });
+            });
+        } else {
+            request.getParameterNames().asIterator().forEachRemaining(name -> {
+                if (isFieldExistsInClass(object.getClass(), name)) {
+                    try {
+                        Field field = getFieldExistsInClass(object.getClass(), name);
+                        if (request.getParameter(name).equals("")) {
+                            throw new IllegalArgumentException("You must enter something in the input " + name,
+                                    new Throwable("Input " + name + " contains nothing"));
+                        }
+                        Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(name),
+                                field.getType());
+                        castingInputValue(request, field, name, method, object);
+                    } catch (NoSuchMethodException | SecurityException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (IllegalArgumentException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (NoSuchFieldException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (IllegalAccessException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    } catch (InvocationTargetException e) {
+                        // TODO Auto-generated catch block
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -267,6 +304,7 @@ public final class PackageManager {
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
         FileUploader fileUploader = new FileUploader(part.getSubmittedFileName(), "",
                 part.getInputStream().readAllBytes());
+        System.out.println(fileUploader.getFilename());
         method.invoke(object, fileUploader);
     }
 

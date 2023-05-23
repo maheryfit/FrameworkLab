@@ -9,7 +9,7 @@ public class Emp {
     private int id;
     private FileUploader file;
 
-    public void setFileUpload(FileUploader file) {
+    public void setFile(FileUploader file) {
         this.file = file;
     }
 

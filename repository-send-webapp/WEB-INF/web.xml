@@ -11,6 +11,13 @@
             <param-value>mg</param-value>
             <description>Nom du package source</description>
         </init-param>
+        <multipart-config>
+            <!-- Préciser un fichier temporaire pour stocker le fichier avant de le traiter -->
+            <location>E:\Unity</location>
+            <max-file-size>100485760</max-file-size>
+            <max-request-size>200971520</max-request-size>
+            <file-size-threshold>52428800</file-size-threshold>
+        </multipart-config>
     </servlet>
     <servlet-mapping>
         <servlet-name>FrontServlet</servlet-name>

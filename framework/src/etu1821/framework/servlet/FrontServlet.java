@@ -19,6 +19,8 @@ import java.util.Arrays;
 
 @MultipartConfig
 public final class FrontServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1273074928096412095L;
     private HashMap<String, Mapping> mappingUrls;
 
     /**
