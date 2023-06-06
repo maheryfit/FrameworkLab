@@ -1,5 +1,6 @@
 package etu1821.framework.servlet;
 
+import etu1821.annotation.Scope;
 import etu1821.annotation.Url;
 import etu1821.helper.PackageManager;
 import etu1821.servlet.Mapping;
@@ -22,6 +23,7 @@ public final class FrontServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1273074928096412095L;
     private HashMap<String, Mapping> mappingUrls;
+    private HashMap<Class<?>, Object> mappingUrlsScope;
 
     /**
      * 
@@ -30,6 +32,7 @@ public final class FrontServlet extends HttpServlet {
      */
     private void setMappingUrls() throws IOException, ClassNotFoundException {
         HashMap<String, Mapping> annotatedMethods = new HashMap<>();
+        HashMap<Class<?>, Object> mappingScope = new HashMap<>();
         String packageName = this.getInitParameter("packageName");
         List<Class<?>> classes = PackageManager.getClassesInMyApplication(packageName);
         for (Class<?> cls : classes) {
@@ -41,10 +44,18 @@ public final class FrontServlet extends HttpServlet {
                     for (String value : values) {
                         annotatedMethods.put(value, new Mapping(cls.getName(), method.getName()));
                     }
+                    if (cls.isAnnotationPresent(Scope.class)) {
+                        if (cls.getAnnotation(Scope.class).value().equals("Singleton")) {
+                            if (!mappingScope.containsKey(cls)) {
+                                mappingScope.put(cls, null);
+                            }
+                        }
+                    }
                 }
             }
         }
         mappingUrls = annotatedMethods;
+        mappingUrlsScope = mappingScope;
     }
 
     @Override
@@ -89,7 +100,7 @@ public final class FrontServlet extends HttpServlet {
             InvocationTargetException, NoSuchMethodException, InstantiationException, ServletException, Exception {
         String path = getURI(request);
         Mapping map = this.mappingUrls.get(path);
-        Object object = PackageManager.getObjectFromMappingUsingMethod(map, request);
+        Object object = PackageManager.getObjectFromMappingUsingMethod(map, request, this.mappingUrlsScope);
         if (object instanceof ModelView) {
             ModelView modelView = (ModelView) object;
             sendDataToView(request, response, modelView);
@@ -113,7 +124,13 @@ public final class FrontServlet extends HttpServlet {
         } else {
             throw new IllegalArgumentException("The field data must be an instance of HashMap<String, Object>");
         }
-        request.getRequestDispatcher("/" + modelView.getView()).forward(request, response);
+        String view = "";
+        if (modelView.getView().startsWith("/")) {
+            view = modelView.getView();
+        } else {
+            view = "/" + modelView.getView();
+        }
+        request.getRequestDispatcher("/" + view).forward(request, response);
     }
 
     @Override

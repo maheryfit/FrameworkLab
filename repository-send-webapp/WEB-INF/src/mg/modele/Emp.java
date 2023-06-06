@@ -4,7 +4,9 @@ import etu1821.annotation.Url;
 import etu1821.helper.FileUploader;
 import etu1821.servlet.ModelView;
 import etu1821.annotation.ParamName;
+import etu1821.annotation.Scope;
 
+@Scope
 public class Emp {
     private int id;
     private FileUploader file;
@@ -28,9 +30,10 @@ public class Emp {
     @Url({ "/", "" })
     public ModelView getAll() {
         ModelView modele = new ModelView("test.jsp");
+        id++;
         modele.addItem("Nom", "Jean")
                 .addItem("Prenom", "Mahery")
-                .addItem("id", getId())
+                .addItem("id", id)
                 .addItem("Age", 18);
         return modele;
     }
