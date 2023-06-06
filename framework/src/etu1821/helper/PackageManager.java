@@ -23,6 +23,8 @@ import jakarta.servlet.http.Part;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -55,7 +57,33 @@ public final class PackageManager {
 
     /**
      * 
+     * @param directory
+     * @param packageName
+     * @return
+     * @throws ClassNotFoundException
+     */
+    private static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
+        List<Class<?>> classes = new LinkedList<>();
+        if (!directory.exists()) {
+            return classes;
+        }
+        File[] files = directory.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                assert !file.getName().contains(".");
+                classes.addAll(findClasses(file, packageName + "." + file.getName()));
+            } else if (file.getName().endsWith(".class")) {
+                String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
+                classes.add(Class.forName(className));
+            }
+        }
+        return classes;
+    }
+
+    /**
+     * 
      * @param mapping
+     * @param mappingUrlsScope
      * @return
      * @throws ClassNotFoundException
      * @throws IllegalAccessException
@@ -65,13 +93,18 @@ public final class PackageManager {
      * @throws InstantiationException
      * @throws Exception
      */
-    public static Object getObjectFromMappingUsingMethod(Mapping mapping, HttpServletRequest request)
+    public static Object getObjectFromMappingUsingMethod(Mapping mapping, HttpServletRequest request,
+            HashMap<Class<?>, Object> mappingUrlsScope)
             throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
             NoSuchMethodException, InstantiationException, Exception {
         Method method = null;
-        Object cl = getObjectFromMapping(mapping);
+        Object cl = getObjectFromMapping(mapping, mappingUrlsScope);
         if (!request.getParameterMap().isEmpty() && request.getMethod().toLowerCase().equals("post")) {
             sendDataToModel(request, cl);
+        }
+        Class<?> clazz = Class.forName(mapping.getClassName());
+        if (mappingUrlsScope.containsKey(clazz)) {
+            backToNull(cl);
         }
         List<Method> methods = Arrays.asList(cl.getClass().getDeclaredMethods());
         method = methods.stream()
@@ -123,10 +156,11 @@ public final class PackageManager {
      * @throws IllegalAccessException
      * @throws IllegalArgumentException
      * @throws InvocationTargetException
+     * @throws ParseException
      */
     @SuppressWarnings("unchecked")
     private static <T> T adequatObjectForParameter(HttpServletRequest request, Parameter parameter, Method method)
-            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, ParseException {
         if (request.getParameter(parameter.getAnnotation(ParamName.class).value()) == null) {
             if (parameter.getType().getSimpleName().equals("int")
                     || parameter.getType().getSimpleName().equals("Integer")
@@ -164,10 +198,17 @@ public final class PackageManager {
         } else if (parameter.getType().getSimpleName().equals("String")) {
             obj = (T) (String) request.getParameter(parameter.getAnnotation(ParamName.class).value())
                     .trim();
-        } else if (parameter.getType().getSimpleName().equals("Date")) {
+        } else if (parameter.getType().getName().equals("java.sql.Date")) {
             obj = (T) (Date) Date
                     .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
                             .trim());
+        } else if (parameter.getType().getName().equals("java.util.Date")) {
+            String dateStr = parameter.getAnnotation(ParamName.class).value().trim();
+            String formatStr = getDateFormat(dateStr);
+
+            SimpleDateFormat formatter = new SimpleDateFormat(formatStr);
+            java.util.Date date = formatter.parse(dateStr);
+            obj = (T) (java.util.Date) date;
         } else if (parameter.getType().getSimpleName().equals("Time")) {
             obj = (T) (Time) Time
                     .valueOf(request.getParameter(parameter.getAnnotation(ParamName.class).value())
@@ -197,6 +238,39 @@ public final class PackageManager {
 
     /**
      * 
+     * @param dateString
+     * @return
+     */
+    private static String getDateFormat(String dateString) {
+        String[] formats = {
+                "dd-MM-yyyy",
+                "MM-dd-yyyy",
+                "yyyy-MM-dd",
+                "dd/MM/yyyy",
+                "MM/dd/yyyy",
+                "yyyy/MM/dd"
+                // Add more date formats as needed
+        };
+
+        for (String format : formats) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat(format);
+                java.util.Date date = sdf.parse(dateString);
+                String formattedDate = sdf.format(date);
+
+                if (formattedDate.equals(dateString)) {
+                    return format;
+                }
+            } catch (Exception e) {
+                // Date parsing failed for the current format, try the next one
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 
      * @param request
      * @param object
      * @throws ClassNotFoundException
@@ -222,10 +296,6 @@ public final class PackageManager {
                 if (isFieldExistsInClass(object.getClass(), name)) {
                     try {
                         Field field = getFieldExistsInClass(object.getClass(), name);
-                        if (request.getPart(name).getName().equals("")) {
-                            throw new IllegalArgumentException("You must enter something in the input " + name,
-                                    new Throwable("Input " + name + " contains nothing"));
-                        }
                         Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(name),
                                 field.getType());
                         if (field.getType().isInstance(fileUploader)) {
@@ -251,7 +321,7 @@ public final class PackageManager {
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         throw new RuntimeException(e);
-                    } catch (ServletException e) {
+                    } catch (ParseException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
@@ -262,10 +332,6 @@ public final class PackageManager {
                 if (isFieldExistsInClass(object.getClass(), name)) {
                     try {
                         Field field = getFieldExistsInClass(object.getClass(), name);
-                        if (request.getParameter(name).equals("")) {
-                            throw new IllegalArgumentException("You must enter something in the input " + name,
-                                    new Throwable("Input " + name + " contains nothing"));
-                        }
                         Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(name),
                                 field.getType());
                         castingInputValue(request, field, name, method, object);
@@ -284,6 +350,9 @@ public final class PackageManager {
                     } catch (InvocationTargetException e) {
                         // TODO Auto-generated catch block
                         throw new RuntimeException(e);
+                    } catch (ParseException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
                     }
                 }
             });
@@ -304,7 +373,6 @@ public final class PackageManager {
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
         FileUploader fileUploader = new FileUploader(part.getSubmittedFileName(), "",
                 part.getInputStream().readAllBytes());
-        System.out.println(fileUploader.getFilename());
         method.invoke(object, fileUploader);
     }
 
@@ -334,10 +402,12 @@ public final class PackageManager {
      * @throws IllegalAccessException
      * @throws IllegalArgumentException
      * @throws InvocationTargetException
+     * @throws ParseException
      */
     private static void castingInputValue(HttpServletRequest request, Field field, String name, Method method,
             Object object)
-            throws NumberFormatException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            throws NumberFormatException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+            ParseException {
         if (field.getType().getSimpleName().equals("int")
                 || field.getType().getSimpleName().equals("Integer")) {
             method.invoke(object, Integer.parseInt(request.getParameter(name).trim()));
@@ -352,8 +422,15 @@ public final class PackageManager {
             method.invoke(object, Long.parseLong(request.getParameter(name).trim()));
         } else if (field.getType().getSimpleName().equals("String")) {
             method.invoke(object, request.getParameter(name).trim());
-        } else if (field.getType().getSimpleName().equals("Date")) {
+        } else if (field.getType().getName().equals("java.sql.Date")) {
             method.invoke(object, Date.valueOf(request.getParameter(name).trim()));
+        } else if (field.getType().getName().equals("java.util.Date")) {
+            String dateStr = request.getParameter(name).trim();
+            String formatStr = getDateFormat(dateStr);
+
+            SimpleDateFormat formatter = new SimpleDateFormat(formatStr);
+            java.util.Date date = formatter.parse(dateStr);
+            method.invoke(object, date);
         } else if (field.getType().getSimpleName().equals("Time")) {
             method.invoke(object, Time.valueOf(request.getParameter(name).trim()));
         } else if (field.getType().getSimpleName().equals("Timestamp")) {
@@ -399,32 +476,8 @@ public final class PackageManager {
 
     /**
      * 
-     * @param directory
-     * @param packageName
-     * @return
-     * @throws ClassNotFoundException
-     */
-    private static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
-        List<Class<?>> classes = new LinkedList<>();
-        if (!directory.exists()) {
-            return classes;
-        }
-        File[] files = directory.listFiles();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                assert !file.getName().contains(".");
-                classes.addAll(findClasses(file, packageName + "." + file.getName()));
-            } else if (file.getName().endsWith(".class")) {
-                String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
-                classes.add(Class.forName(className));
-            }
-        }
-        return classes;
-    }
-
-    /**
-     * 
      * @param mapping
+     * @param mappingUrlsScope
      * @return
      * @throws ClassNotFoundException
      * @throws InstantiationException
@@ -434,11 +487,68 @@ public final class PackageManager {
      * @throws NoSuchMethodException
      * @throws SecurityException
      */
-    private static Object getObjectFromMapping(Mapping mapping)
+    private static Object getObjectFromMapping(Mapping mapping, HashMap<Class<?>, Object> mappingUrlsScope)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException, SecurityException {
         Class<?> clazz = Class.forName(mapping.getClassName());
-        Object cl = clazz.getConstructor().newInstance();
+        Object cl = null;
+        HashMap<Class<?>, Object> hashMap = mappingUrlsScope;
+        if (hashMap.containsKey(clazz)) {
+            if (hashMap.get(clazz) == null) {
+                cl = clazz.getConstructor().newInstance();
+                hashMap.put(clazz, cl);
+                System.out.println("New instanciation");
+            } else {
+                cl = hashMap.get(clazz);
+                System.out.println("Already instanciated");
+            }
+        } else {
+            cl = clazz.getConstructor().newInstance();
+        }
         return cl;
+    }
+
+    /**
+     * 
+     * @param object
+     */
+    private static void backToNull(Object object) {
+        List<Field> listFields = Arrays.asList(object.getClass().getDeclaredFields());
+        System.out.println(object.getClass().getSimpleName());
+        listFields.forEach(field -> {
+            try {
+                if (field.getType().getSimpleName().equals("int")
+                        || field.getType().getSimpleName().equals("Integer")
+                        || field.getType().getSimpleName().equals("Double")
+                        || field.getType().getSimpleName().equals("double")
+                        || field.getType().getSimpleName().equals("long")
+                        || field.getType().getSimpleName().equals("Long")
+                        || field.getType().getSimpleName().equals("float")
+                        || field.getType().getSimpleName().equals("Float")) {
+                    object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()), field.getType())
+                            .invoke(object, 0);
+                    System.out.println("C'est un nombre");
+
+                } else {
+                    object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()), field.getType())
+                            .invoke(object,
+                                    new Object[] { null });
+                    System.out.println("C'est un objet");
+                }
+
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                // TODO Auto-generated catch block
+                throw new RuntimeException(e);
+            } catch (InvocationTargetException e) {
+                // TODO Auto-generated catch block
+                throw new RuntimeException(e);
+            } catch (NoSuchMethodException e) {
+                // TODO Auto-generated catch block
+                throw new RuntimeException(e);
+            } catch (SecurityException e) {
+                // TODO Auto-generated catch block
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
