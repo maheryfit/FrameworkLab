@@ -13,6 +13,7 @@ import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.util.*;
 
+import etu1821.annotation.Auth;
 import etu1821.annotation.ParamName;
 import etu1821.annotation.Url;
 import etu1821.servlet.Mapping;
@@ -94,14 +95,17 @@ public final class PackageManager {
      * @throws Exception
      */
     public static Object getObjectFromMappingUsingMethod(Mapping mapping, HttpServletRequest request,
-            HashMap<Class<?>, Object> mappingUrlsScope)
+            HashMap<Class<?>, Object> mappingUrlsScope, HashMap<String, Object> sessions, String connectionKey,
+            String roleKey)
             throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
             NoSuchMethodException, InstantiationException, Exception {
         Method method = null;
         Object cl = getObjectFromMapping(mapping, mappingUrlsScope);
+        // Traitement des méthodes d'envois de données - Sprint 8
         if (!request.getParameterMap().isEmpty() && request.getMethod().toLowerCase().equals("post")) {
             sendDataToModel(request, cl);
         }
+        // Rendre null la classe singleton - Sprint 10
         Class<?> clazz = Class.forName(mapping.getClassName());
         if (mappingUrlsScope.containsKey(clazz)) {
             backToNull(cl);
@@ -111,7 +115,15 @@ public final class PackageManager {
                 .filter(mtd -> mtd.isAnnotationPresent(Url.class)
                         && mtd.getName().equals(mapping.getMethod()))
                 .findFirst().get();
+        // Sprint - 11
+        if (method.isAnnotationPresent(Auth.class)) {
+            treatSession(method, roleKey, connectionKey, sessions);
+        } else {
+            System.out.println("Noooooooooooooooooooooooooooooooonnnnnnnnn");
+        }
+
         Object o = null;
+        // Traitement des urls de types GET - Sprint 9
         if (!request.getParameterMap().isEmpty() && request.getMethod().toLowerCase().equals("get")) {
             o = treatMethodGet(request, method, cl);
         } else {
@@ -122,6 +134,36 @@ public final class PackageManager {
             }
         }
         return o;
+    }
+
+    /**
+     * 
+     * @param method
+     * @param roleKey
+     * @param connectionKey
+     * @param sessions
+     * @throws Exception
+     */
+    private static void treatSession(Method method, String roleKey, String connectionKey,
+            HashMap<String, Object> sessions)
+            throws Exception {
+        sessions.put(connectionKey, true);
+        if (sessions.get(connectionKey) != null) {
+            Object value = sessions.get(roleKey);
+            if (value == null) {
+                throw new Exception("The session is null",
+                        new Throwable("Your method must have a session to have a permission into this method"));
+            }
+            if (value.getClass().isInstance(new String())) {
+                String valString = String.class.cast(value);
+                if (!valString.equals(method.getAnnotation(Auth.class).value())) {
+                    throw new Exception("You don't have the permission to access into this method");
+                }
+            }
+        } else {
+            throw new Exception("The session is null",
+                    new Throwable("Your method must have a session to have a permission into this method"));
+        }
     }
 
     /**
@@ -162,14 +204,9 @@ public final class PackageManager {
     private static <T> T adequatObjectForParameter(HttpServletRequest request, Parameter parameter, Method method)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, ParseException {
         if (request.getParameter(parameter.getAnnotation(ParamName.class).value()) == null) {
-            if (parameter.getType().getSimpleName().equals("int")
-                    || parameter.getType().getSimpleName().equals("Integer")
-                    || parameter.getType().getSimpleName().equals("Double")
-                    || parameter.getType().getSimpleName().equals("double")
-                    || parameter.getType().getSimpleName().equals("long")
-                    || parameter.getType().getSimpleName().equals("Long")
-                    || parameter.getType().getSimpleName().equals("float")
-                    || parameter.getType().getSimpleName().equals("Float")) {
+            Set<String> allowedTypes = new HashSet<>(
+                    Arrays.asList("int", "Integer", "Double", "double", "long", "Long", "float", "Float"));
+            if (allowedTypes.contains(parameter.getType().getSimpleName())) {
                 return (T) (Number) 0;
             }
             return null;
@@ -263,6 +300,7 @@ public final class PackageManager {
                 }
             } catch (Exception e) {
                 // Date parsing failed for the current format, try the next one
+                throw new RuntimeException(e);
             }
         }
 
@@ -517,18 +555,12 @@ public final class PackageManager {
         System.out.println(object.getClass().getSimpleName());
         listFields.forEach(field -> {
             try {
-                if (field.getType().getSimpleName().equals("int")
-                        || field.getType().getSimpleName().equals("Integer")
-                        || field.getType().getSimpleName().equals("Double")
-                        || field.getType().getSimpleName().equals("double")
-                        || field.getType().getSimpleName().equals("long")
-                        || field.getType().getSimpleName().equals("Long")
-                        || field.getType().getSimpleName().equals("float")
-                        || field.getType().getSimpleName().equals("Float")) {
+                Set<String> allowedTypes = new HashSet<>(
+                        Arrays.asList("int", "Integer", "Double", "double", "long", "Long", "float", "Float"));
+                if (allowedTypes.contains(field.getType().getSimpleName())) {
                     object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()), field.getType())
                             .invoke(object, 0);
                     System.out.println("C'est un nombre");
-
                 } else {
                     object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()), field.getType())
                             .invoke(object,

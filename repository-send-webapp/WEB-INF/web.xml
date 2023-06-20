@@ -6,11 +6,28 @@
     <servlet>
         <servlet-name>FrontServlet</servlet-name>
         <servlet-class>etu1821.framework.servlet.FrontServlet</servlet-class>
+        <!-- Nom du package -->
         <init-param>
             <param-name>packageName</param-name>
             <param-value>mg</param-value>
             <description>Nom du package source</description>
         </init-param>
+
+        <!-- Variable de session -->
+        <init-param>
+            <param-name>connection</param-name>
+            <param-value>connected</param-value>
+            <description>tester si connecté ou non</description>
+        </init-param>
+
+        <!-- Variable de session -->
+        <init-param>
+            <param-name>profile</param-name>
+            <param-value>role</param-value>
+            <description>profile des utilisateurs</description>
+        </init-param>
+
+        <!-- Traitement des fichiers UploadFile -->
         <multipart-config>
             <!-- Préciser un fichier temporaire pour stocker le fichier avant de le traiter -->
             <location>E:\Unity</location>

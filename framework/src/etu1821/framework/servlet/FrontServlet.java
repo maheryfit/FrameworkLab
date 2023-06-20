@@ -24,6 +24,7 @@ public final class FrontServlet extends HttpServlet {
     private static final long serialVersionUID = 1273074928096412095L;
     private HashMap<String, Mapping> mappingUrls;
     private HashMap<Class<?>, Object> mappingUrlsScope;
+    private HashMap<String, Object> sessions = new HashMap<>();
 
     /**
      * 
@@ -44,6 +45,7 @@ public final class FrontServlet extends HttpServlet {
                     for (String value : values) {
                         annotatedMethods.put(value, new Mapping(cls.getName(), method.getName()));
                     }
+                    // Traitement du sprint 10
                     if (cls.isAnnotationPresent(Scope.class)) {
                         if (cls.getAnnotation(Scope.class).value().equals("Singleton")) {
                             if (!mappingScope.containsKey(cls)) {
@@ -100,9 +102,19 @@ public final class FrontServlet extends HttpServlet {
             InvocationTargetException, NoSuchMethodException, InstantiationException, ServletException, Exception {
         String path = getURI(request);
         Mapping map = this.mappingUrls.get(path);
-        Object object = PackageManager.getObjectFromMappingUsingMethod(map, request, this.mappingUrlsScope);
+        String connectionKey = this.getInitParameter("connection");
+        String roleKey = this.getInitParameter("profile");
+        Object object = PackageManager.getObjectFromMappingUsingMethod(map, request, this.mappingUrlsScope,
+                this.sessions, connectionKey, roleKey);
         if (object instanceof ModelView) {
             ModelView modelView = (ModelView) object;
+            if (!modelView.getSession().isEmpty()) {
+                if (this.sessions.get(connectionKey).equals(true)) {
+                    this.sessions.put(roleKey, modelView.getSession().get(roleKey));
+                } else {
+                    throw new Exception("It seems that the session is false");
+                }
+            }
             sendDataToView(request, response, modelView);
         }
     }
