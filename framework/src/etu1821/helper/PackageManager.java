@@ -118,8 +118,6 @@ public final class PackageManager {
         // Sprint - 11
         if (method.isAnnotationPresent(Auth.class)) {
             treatSession(method, roleKey, connectionKey, sessions);
-        } else {
-            System.out.println("Noooooooooooooooooooooooooooooooonnnnnnnnn");
         }
 
         Object o = null;
@@ -152,7 +150,7 @@ public final class PackageManager {
             Object value = sessions.get(roleKey);
             if (value == null) {
                 throw new Exception("The session is null",
-                        new Throwable("Your method must have a session to have a permission into this method"));
+                        new Throwable("Your method must have a session to access into this method"));
             }
             if (value.getClass().isInstance(new String())) {
                 String valString = String.class.cast(value);
@@ -162,7 +160,7 @@ public final class PackageManager {
             }
         } else {
             throw new Exception("The session is null",
-                    new Throwable("Your method must have a session to have a permission into this method"));
+                    new Throwable("Your method must have a session to access into this method"));
         }
     }
 
