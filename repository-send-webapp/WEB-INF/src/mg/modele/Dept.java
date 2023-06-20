@@ -28,7 +28,7 @@ public class Dept {
 
    }
 
-   @Url("dept")
+   @Url("/dept")
    public ModelView showDept() {
       ModelView modelView = new ModelView("dept-test.jsp");
       id++;

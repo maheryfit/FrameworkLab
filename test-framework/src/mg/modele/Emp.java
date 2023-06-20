@@ -3,6 +3,7 @@ package mg.modele;
 import etu1821.annotation.Url;
 import etu1821.helper.FileUploader;
 import etu1821.servlet.ModelView;
+import etu1821.annotation.Auth;
 import etu1821.annotation.ParamName;
 import etu1821.annotation.Scope;
 
@@ -45,6 +46,22 @@ public class Emp {
                 .addItem("Prenom", "Mahery")
                 .addItem("id", id)
                 .addItem("Age", 18);
+        return modele;
+    }
+
+    @Url("/to-admin")
+    public ModelView toAdmin() {
+        ModelView modele = new ModelView("toadmin.jsp");
+        modele.addItem("identifiant", "Je suis identifié");
+        modele.addSession("role", "admin");
+        return modele;
+    }
+
+    @Url("/admin")
+    @Auth("admin")
+    public ModelView onlyForAdmin() {
+        ModelView modele = new ModelView("admin.jsp");
+        modele.addItem("identifiant", "Je suis dans admin.jsp");
         return modele;
     }
 }
