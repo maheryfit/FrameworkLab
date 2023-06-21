@@ -102,17 +102,24 @@ public final class FrontServlet extends HttpServlet {
             InvocationTargetException, NoSuchMethodException, InstantiationException, ServletException, Exception {
         String path = getURI(request);
         Mapping map = this.mappingUrls.get(path);
-        String connectionKey = this.getInitParameter("connection");
-        String roleKey = this.getInitParameter("profile");
+        String connectionKey = this.getInitParameter("connection").trim();
+        String roleKey = this.getInitParameter("profile").trim();
+        System.out.println(roleKey + " dans la méthode processRequest");
         Object object = PackageManager.getObjectFromMappingUsingMethod(map, request, this.mappingUrlsScope,
                 this.sessions, connectionKey, roleKey);
         if (object instanceof ModelView) {
             ModelView modelView = (ModelView) object;
-            if (!modelView.getSession().isEmpty()) {
+            if (!modelView.getSession().isEmpty() && this.sessions.get(connectionKey) != null) {
                 if (this.sessions.get(connectionKey).equals(true)) {
                     this.sessions.put(roleKey, modelView.getSession().get(roleKey));
+                    modelView.getSession().forEach((key, value) -> {
+                        if (!key.equals(roleKey) && !key.equals(connectionKey)) {
+                            this.sessions.put(key, value);
+                        }
+                    });
                 } else {
-                    throw new Exception("It seems that the session is false");
+                    throw new Exception("It seems that the session is destroy",
+                            new Throwable("You must enter new session"));
                 }
             }
             sendDataToView(request, response, modelView);
