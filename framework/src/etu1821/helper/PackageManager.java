@@ -15,6 +15,7 @@ import java.util.*;
 
 import etu1821.annotation.Auth;
 import etu1821.annotation.ParamName;
+import etu1821.annotation.SessionField;
 import etu1821.annotation.Url;
 import etu1821.servlet.Mapping;
 import jakarta.servlet.ServletException;
@@ -105,6 +106,7 @@ public final class PackageManager {
         if (!request.getParameterMap().isEmpty() && request.getMethod().toLowerCase().equals("post")) {
             sendDataToModel(request, cl);
         }
+
         // Rendre null la classe singleton - Sprint 10
         Class<?> clazz = Class.forName(mapping.getClassName());
         if (mappingUrlsScope.containsKey(clazz)) {
@@ -115,10 +117,14 @@ public final class PackageManager {
                 .filter(mtd -> mtd.isAnnotationPresent(Url.class)
                         && mtd.getName().equals(mapping.getMethod()))
                 .findFirst().get();
+
         // Sprint - 11
         if (method.isAnnotationPresent(Auth.class)) {
             treatSession(method, roleKey, connectionKey, sessions);
         }
+
+        // Sprint - 12
+        sendFrontServletSessionToModel(cl, sessions);
 
         Object o = null;
         // Traitement des urls de types GET - Sprint 9
@@ -136,6 +142,37 @@ public final class PackageManager {
 
     /**
      * 
+     * @param clazz
+     * @return
+     */
+    private static Field getFieldSession(Class<?> clazz) {
+        return Arrays.asList(clazz.getDeclaredFields()).stream()
+                .filter(field -> field.isAnnotationPresent(SessionField.class)).findFirst().get();
+    }
+
+    /**
+     * 
+     * @param object
+     * @param sessionMap
+     * @throws NoSuchMethodException
+     * @throws SecurityException
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     * @throws InvocationTargetException
+     */
+    private static void sendFrontServletSessionToModel(Object object, HashMap<String, Object> sessionMap)
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
+            InvocationTargetException {
+        Field field = getFieldSession(object.getClass());
+        if (field != null) {
+            Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()),
+                    HashMap.class);
+            method.invoke(object, sessionMap);
+        }
+    }
+
+    /**
+     * 
      * @param method
      * @param roleKey
      * @param connectionKey
@@ -145,11 +182,13 @@ public final class PackageManager {
     private static void treatSession(Method method, String roleKey, String connectionKey,
             HashMap<String, Object> sessions)
             throws Exception {
-        sessions.put(connectionKey, true);
-        if (sessions.get(connectionKey) != null) {
+        if (sessions.get(connectionKey) == null) {
+            sessions.put(connectionKey, true);
+        }
+        if (sessions.get(connectionKey) != null && sessions.get(connectionKey).equals(true)) {
             Object value = sessions.get(roleKey);
             if (value == null) {
-                throw new Exception("The session is null",
+                throw new Exception("The session is null and your profile is null",
                         new Throwable("Your method must have a session to access into this method"));
             }
             if (value.getClass().isInstance(new String())) {
@@ -533,10 +572,8 @@ public final class PackageManager {
             if (hashMap.get(clazz) == null) {
                 cl = clazz.getConstructor().newInstance();
                 hashMap.put(clazz, cl);
-                System.out.println("New instanciation");
             } else {
                 cl = hashMap.get(clazz);
-                System.out.println("Already instanciated");
             }
         } else {
             cl = clazz.getConstructor().newInstance();
@@ -550,7 +587,6 @@ public final class PackageManager {
      */
     private static void backToNull(Object object) {
         List<Field> listFields = Arrays.asList(object.getClass().getDeclaredFields());
-        System.out.println(object.getClass().getSimpleName());
         listFields.forEach(field -> {
             try {
                 Set<String> allowedTypes = new HashSet<>(
@@ -558,12 +594,10 @@ public final class PackageManager {
                 if (allowedTypes.contains(field.getType().getSimpleName())) {
                     object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()), field.getType())
                             .invoke(object, 0);
-                    System.out.println("C'est un nombre");
                 } else {
                     object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()), field.getType())
                             .invoke(object,
                                     new Object[] { null });
-                    System.out.println("C'est un objet");
                 }
 
             } catch (IllegalArgumentException | IllegalAccessException e) {
