@@ -182,12 +182,10 @@ public final class PackageManager {
     private static void treatSession(Method method, String roleKey, String connectionKey,
             HashMap<String, Object> sessions)
             throws Exception {
-        sessions.put(connectionKey, true);
-        System.out.println(roleKey + " dans la méthode treatSession");
-        if (sessions.get(connectionKey) != null) {
-            sessions.forEach((key, value) -> {
-                System.out.println(key + " " + value);
-            });
+        if (sessions.get(connectionKey) == null) {
+            sessions.put(connectionKey, true);
+        }
+        if (sessions.get(connectionKey) != null && sessions.get(connectionKey).equals(true)) {
             Object value = sessions.get(roleKey);
             if (value == null) {
                 throw new Exception("The session is null and your profile is null",

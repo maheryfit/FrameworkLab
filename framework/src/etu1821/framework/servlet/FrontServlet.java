@@ -104,7 +104,6 @@ public final class FrontServlet extends HttpServlet {
         Mapping map = this.mappingUrls.get(path);
         String connectionKey = this.getInitParameter("connection").trim();
         String roleKey = this.getInitParameter("profile").trim();
-        System.out.println(roleKey + " dans la méthode processRequest");
         Object object = PackageManager.getObjectFromMappingUsingMethod(map, request, this.mappingUrlsScope,
                 this.sessions, connectionKey, roleKey);
         if (object instanceof ModelView) {
