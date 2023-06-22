@@ -55,11 +55,16 @@ public class Emp {
 
     @Url({ "/index", "/ajouter" })
     public ModelView getDefaultPage(@ParamName("id") int id, @ParamName("name") String name) {
-        ModelView modele = new ModelView("default.jsp");
+        ModelView modele = new ModelView();
+        Dept[] depts = new Dept[3];
+        depts[0] = new Dept(1, "Tristesse");
+        depts[1] = new Dept(2, "Désespoir");
+        depts[2] = new Dept(3, "Acceptation");
         modele.addItem("Nom", name)
                 .addItem("Prenom", "Mahery")
                 .addItem("id", id)
-                .addItem("Age", 18);
+                .addItem("Age", 18)
+                .addItem("Emotions", depts);
         return modele;
     }
 

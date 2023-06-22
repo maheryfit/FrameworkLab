@@ -2,6 +2,7 @@ package etu1821.framework.servlet;
 
 import etu1821.annotation.Scope;
 import etu1821.annotation.Url;
+import etu1821.helper.JsonHelper;
 import etu1821.helper.PackageManager;
 import etu1821.servlet.Mapping;
 import etu1821.servlet.ModelView;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -121,7 +123,13 @@ public final class FrontServlet extends HttpServlet {
                             new Throwable("You must enter new session"));
                 }
             }
-            sendDataToView(request, response, modelView);
+            if (modelView.getJson()) {
+                response.setContentType("application/json");
+                PrintWriter out = response.getWriter();
+                out.println(JsonHelper.transformMapToJson(modelView.getData()));
+            } else {
+                sendDataToView(request, response, modelView);
+            }
         }
     }
 

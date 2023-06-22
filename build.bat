@@ -1,6 +1,11 @@
 cd framework/classes
 jar cf fw.jar .
 move fw.jar ../../test-framework/lib 
+
+@REM Ajouter dernièrement avec le sprint - 13
+cd ../
+cd ./lib
+xcopy *  E:\Github\FrameworkLab\test-framework\WEB-INF\ /E /I /Y
 cd ../../
 cd ./test-framework/
 xcopy * E:\Github\FrameworkLab\repository-send-webapp\WEB-INF\ /E /I /Y

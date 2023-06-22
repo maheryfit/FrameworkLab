@@ -7,9 +7,18 @@ public class ModelView {
 
     private HashMap<String, Object> data;
     private HashMap<String, Object> session;
+    private boolean json;
+
+    public void setJson(boolean json) {
+        this.json = json;
+    }
+
+    public boolean getJson() {
+        return json;
+    }
 
     public void setView(String view) {
-        if (view.equals("") || view == null)
+        if ((view.equals("") || view == null) && json == false)
             throw new IllegalArgumentException("The view must be a filename", new Throwable("View equals to nothing"));
 
         this.view = view;
@@ -46,7 +55,15 @@ public class ModelView {
     }
 
     public ModelView(String view) {
+        setJson(false);
         setView(view);
+        setData(new HashMap<>());
+        setSession(new HashMap<>());
+    }
+
+    public ModelView() {
+        setJson(true);
+        setView("");
         setData(new HashMap<>());
         setSession(new HashMap<>());
     }
