@@ -28,6 +28,11 @@ public class Dept {
 
    }
 
+   public Dept(int id, String nom) {
+      this.id = id;
+      this.nom = nom;
+   }
+
    @Url("/dept")
    public ModelView showDept() {
       ModelView modelView = new ModelView("dept-test.jsp");
