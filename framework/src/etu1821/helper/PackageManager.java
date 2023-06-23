@@ -146,8 +146,12 @@ public final class PackageManager {
      * @return
      */
     private static Field getFieldSession(Class<?> clazz) {
-        return Arrays.asList(clazz.getDeclaredFields()).stream()
-                .filter(field -> field.isAnnotationPresent(SessionField.class)).findFirst().get();
+        try {
+            return Arrays.asList(clazz.getDeclaredFields()).stream()
+                    .filter(field -> field.isAnnotationPresent(SessionField.class)).findFirst().get();
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     /**
