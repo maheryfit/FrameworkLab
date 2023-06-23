@@ -124,13 +124,19 @@ public final class FrontServlet extends HttpServlet {
                 }
             }
             if (modelView.getJson()) {
-                response.setContentType("application/json");
-                PrintWriter out = response.getWriter();
-                out.println(JsonHelper.transformMapToJson(modelView.getData()));
+                outPrintJson(JsonHelper.transformMapToJson(modelView.getData()), response);
             } else {
                 sendDataToView(request, response, modelView);
             }
+        } else {
+            outPrintJson(JsonHelper.getJSONFromArray(object), response);
         }
+    }
+
+    private void outPrintJson(String object, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        out.println(object);
     }
 
     /**

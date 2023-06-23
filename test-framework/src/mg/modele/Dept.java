@@ -1,5 +1,8 @@
 package mg.modele;
 
+import java.util.Arrays;
+import java.util.List;
+
 import etu1821.annotation.Url;
 import etu1821.servlet.ModelView;
 
@@ -39,6 +42,15 @@ public class Dept {
       id++;
       modelView.addItem("id", id);
       return modelView;
+   }
+
+   @Url("/dept-all")
+   public List<Dept> findAll() {
+      Dept[] depts = new Dept[3];
+      depts[0] = new Dept(1, "Tristesse");
+      depts[1] = new Dept(2, "Désespoir");
+      depts[2] = new Dept(3, "Acceptation");
+      return Arrays.asList(depts);
    }
 
 }

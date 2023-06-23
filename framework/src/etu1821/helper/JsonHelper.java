@@ -26,8 +26,16 @@ public class JsonHelper {
       return "{" + retour.toString() + "}";
    }
 
-   private static <T> String getJSONFromArray(Object value) {
-      JSONArray jsonArray = new JSONArray(value);
+   @SuppressWarnings("unchecked")
+   public static <T> String getJSONFromArray(Object value) {
+      Object[] objects;
+      if (value.getClass().isArray()) {
+         objects = (Object[]) value;
+      } else {
+         List<Object> list = (List<Object>) value;
+         objects = list.toArray();
+      }
+      JSONArray jsonArray = new JSONArray(objects);
       return jsonArray.toString();
    }
 
