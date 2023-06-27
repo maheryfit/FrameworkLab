@@ -104,6 +104,7 @@ public final class FrontServlet extends HttpServlet {
             InvocationTargetException, NoSuchMethodException, InstantiationException, ServletException, Exception {
         String path = getURI(request);
         Mapping map = this.mappingUrls.get(path);
+        // Sprint 11
         String connectionKey = this.getInitParameter("connection").trim();
         String roleKey = this.getInitParameter("profile").trim();
         Object object = PackageManager.getObjectFromMappingUsingMethod(map, request, this.mappingUrlsScope,

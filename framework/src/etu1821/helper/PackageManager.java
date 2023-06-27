@@ -197,7 +197,13 @@ public final class PackageManager {
             }
             if (value.getClass().isInstance(new String())) {
                 String valString = String.class.cast(value);
-                if (!valString.equals(method.getAnnotation(Auth.class).value())) {
+                int i = 0;
+                for (String val : method.getAnnotation(Auth.class).value()) {
+                    if (!valString.equals(val)) {
+                        i++;
+                    }
+                }
+                if (i == method.getAnnotation(Auth.class).value().length) {
                     throw new Exception("You don't have the permission to access into this method");
                 }
             }

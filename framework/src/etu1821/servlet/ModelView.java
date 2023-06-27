@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 public class ModelView {
     private String view;
-
     private HashMap<String, Object> data;
     private HashMap<String, Object> session;
     private boolean json;
