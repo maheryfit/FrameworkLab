@@ -169,15 +169,16 @@ public final class PackageManager {
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException {
         Field field = getFieldSession(object.getClass());
-        HashMap<String, Object> sessionMap = new HashMap<>();
-        String temp;
-        Enumeration<String> attributeNames = session.getAttributeNames();
-        // Insérer les valeurs de HttpSession dans un HashMap
-        while (attributeNames.hasMoreElements()) {
-            temp = attributeNames.nextElement();
-            sessionMap.put(temp, session.getAttribute(temp));
-        }
         if (field != null) {
+            HashMap<String, Object> sessionMap = new HashMap<>();
+            String temp;
+            Enumeration<String> attributeNames = session.getAttributeNames();
+            // Insérer les valeurs de HttpSession dans un HashMap
+            while (attributeNames.hasMoreElements()) {
+                temp = attributeNames.nextElement();
+                sessionMap.put(temp, session.getAttribute(temp));
+                System.out.println("Package manager " + session.getAttribute(temp));
+            }
             Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()),
                     HashMap.class);
             method.invoke(object, sessionMap);
@@ -204,6 +205,7 @@ public final class PackageManager {
                 throw new Exception("The session is null and your profile is null",
                         new Throwable("Your method must have a session to access into this method"));
             }
+            // Vérification des roles
             if (value.getClass().isInstance(new String())) {
                 String valString = String.class.cast(value);
                 String[] roles = method.getAnnotation(Auth.class).value();

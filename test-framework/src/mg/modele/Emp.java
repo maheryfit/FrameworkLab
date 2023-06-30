@@ -86,4 +86,14 @@ public class Emp {
         modele.addItem("identifiant", "Je suis dans admin.jsp");
         return modele;
     }
+
+    @Url("/log-out")
+    public ModelView logOut() {
+        ModelView modele = new ModelView("test.jsp");
+        modele.setInvalidateSession(true);
+        modele.removeSession("idUtilisateur")
+                .removeSession("role")
+                .removeSession("connected");
+        return modele;
+    }
 }

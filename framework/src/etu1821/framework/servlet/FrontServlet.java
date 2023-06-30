@@ -107,18 +107,27 @@ public final class FrontServlet extends HttpServlet {
         String path = getURI(request);
         Mapping map = this.mappingUrls.get(path);
         // Sprint 11
-        this.sessions = request.getSession();
+        if (this.sessions == null) {
+            this.sessions = request.getSession();
+        }
         String connectionKey = this.getInitParameter("connection").trim();
         String roleKey = this.getInitParameter("profile").trim();
         Object object = PackageManager.getObjectFromMappingUsingMethod(map, request, this.mappingUrlsScope,
                 this.sessions, connectionKey, roleKey);
         if (object instanceof ModelView) {
             ModelView modelView = (ModelView) object;
+            // Sprint 15
+            if (modelView.isInvalidateSession()) {
+                modelView.getSessionToRemove().forEach(session -> {
+                    this.sessions.removeAttribute(session);
+                });
+            }
             if (!modelView.getSession().isEmpty() && this.sessions.getAttribute(connectionKey) != null) {
                 if (this.sessions.getAttribute(connectionKey).equals(true)) {
                     this.sessions.setAttribute(roleKey, modelView.getSession().get(roleKey));
                     modelView.getSession().forEach((key, value) -> {
-                        if (!key.equals(roleKey) && !key.equals(connectionKey)) {
+                        if (!key.equals(roleKey) && !key.equals(connectionKey)
+                                && this.sessions.getAttribute(key) == null) {
                             this.sessions.setAttribute(key, value);
                         }
                     });
