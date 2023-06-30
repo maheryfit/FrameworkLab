@@ -20,6 +20,7 @@ import etu1821.annotation.Url;
 import etu1821.servlet.Mapping;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import java.sql.Date;
@@ -96,7 +97,7 @@ public final class PackageManager {
      * @throws Exception
      */
     public static Object getObjectFromMappingUsingMethod(Mapping mapping, HttpServletRequest request,
-            HashMap<Class<?>, Object> mappingUrlsScope, HashMap<String, Object> sessions, String connectionKey,
+            HashMap<Class<?>, Object> mappingUrlsScope, HttpSession sessions, String connectionKey,
             String roleKey)
             throws ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
             NoSuchMethodException, InstantiationException, Exception {
@@ -164,10 +165,18 @@ public final class PackageManager {
      * @throws IllegalArgumentException
      * @throws InvocationTargetException
      */
-    private static void sendFrontServletSessionToModel(Object object, HashMap<String, Object> sessionMap)
+    private static void sendFrontServletSessionToModel(Object object, HttpSession session)
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException {
         Field field = getFieldSession(object.getClass());
+        HashMap<String, Object> sessionMap = new HashMap<>();
+        String temp;
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        // Insérer les valeurs de HttpSession dans un HashMap
+        while (attributeNames.hasMoreElements()) {
+            temp = attributeNames.nextElement();
+            sessionMap.put(temp, session.getAttribute(temp));
+        }
         if (field != null) {
             Method method = object.getClass().getDeclaredMethod("set" + capitalizeFirstLetter(field.getName()),
                     HashMap.class);
@@ -184,27 +193,34 @@ public final class PackageManager {
      * @throws Exception
      */
     private static void treatSession(Method method, String roleKey, String connectionKey,
-            HashMap<String, Object> sessions)
+            HttpSession sessions)
             throws Exception {
-        if (sessions.get(connectionKey) == null) {
-            sessions.put(connectionKey, true);
+        if (sessions.getAttribute(connectionKey) == null) {
+            sessions.setAttribute(connectionKey, true);
         }
-        if (sessions.get(connectionKey) != null && sessions.get(connectionKey).equals(true)) {
-            Object value = sessions.get(roleKey);
+        if (sessions.getAttribute(connectionKey) != null && sessions.getAttribute(connectionKey).equals(true)) {
+            Object value = sessions.getAttribute(roleKey);
             if (value == null) {
                 throw new Exception("The session is null and your profile is null",
                         new Throwable("Your method must have a session to access into this method"));
             }
             if (value.getClass().isInstance(new String())) {
                 String valString = String.class.cast(value);
-                int i = 0;
-                for (String val : method.getAnnotation(Auth.class).value()) {
-                    if (!valString.equals(val)) {
-                        i++;
+                String[] roles = method.getAnnotation(Auth.class).value();
+                if (roles.length == 1) {
+                    if (!roles[0].equals(valString)) {
+                        throw new Exception("You don't have the permission to access into this method");
                     }
-                }
-                if (i == method.getAnnotation(Auth.class).value().length) {
-                    throw new Exception("You don't have the permission to access into this method");
+                } else {
+                    int i = 0;
+                    for (String val : roles) {
+                        if (!valString.equals(val)) {
+                            i++;
+                        }
+                    }
+                    if (i == method.getAnnotation(Auth.class).value().length) {
+                        throw new Exception("You don't have the permission to access into this method");
+                    }
                 }
             }
         } else {
