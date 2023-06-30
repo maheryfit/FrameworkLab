@@ -11,6 +11,8 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
@@ -26,7 +28,7 @@ public final class FrontServlet extends HttpServlet {
     private static final long serialVersionUID = 1273074928096412095L;
     private HashMap<String, Mapping> mappingUrls;
     private HashMap<Class<?>, Object> mappingUrlsScope;
-    private HashMap<String, Object> sessions = new HashMap<>();
+    private HttpSession sessions;
 
     /**
      * 
@@ -105,18 +107,28 @@ public final class FrontServlet extends HttpServlet {
         String path = getURI(request);
         Mapping map = this.mappingUrls.get(path);
         // Sprint 11
+        if (this.sessions == null) {
+            this.sessions = request.getSession();
+        }
         String connectionKey = this.getInitParameter("connection").trim();
         String roleKey = this.getInitParameter("profile").trim();
         Object object = PackageManager.getObjectFromMappingUsingMethod(map, request, this.mappingUrlsScope,
                 this.sessions, connectionKey, roleKey);
         if (object instanceof ModelView) {
             ModelView modelView = (ModelView) object;
-            if (!modelView.getSession().isEmpty() && this.sessions.get(connectionKey) != null) {
-                if (this.sessions.get(connectionKey).equals(true)) {
-                    this.sessions.put(roleKey, modelView.getSession().get(roleKey));
+            // Sprint 15
+            if (modelView.isInvalidateSession()) {
+                modelView.getSessionToRemove().forEach(session -> {
+                    this.sessions.removeAttribute(session);
+                });
+            }
+            if (!modelView.getSession().isEmpty() && this.sessions.getAttribute(connectionKey) != null) {
+                if (this.sessions.getAttribute(connectionKey).equals(true)) {
+                    this.sessions.setAttribute(roleKey, modelView.getSession().get(roleKey));
                     modelView.getSession().forEach((key, value) -> {
-                        if (!key.equals(roleKey) && !key.equals(connectionKey)) {
-                            this.sessions.put(key, value);
+                        if (!key.equals(roleKey) && !key.equals(connectionKey)
+                                && this.sessions.getAttribute(key) == null) {
+                            this.sessions.setAttribute(key, value);
                         }
                     });
                 } else {

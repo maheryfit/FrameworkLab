@@ -1,12 +1,16 @@
 package etu1821.servlet;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class ModelView {
     private String view;
     private HashMap<String, Object> data;
     private HashMap<String, Object> session;
     private boolean json;
+    private boolean invalidateSession;
+    private List<String> sessionToRemove = new ArrayList<>();
 
     public void setJson(boolean json) {
         this.json = json;
@@ -66,4 +70,38 @@ public class ModelView {
         setData(new HashMap<>());
         setSession(new HashMap<>());
     }
+
+    /**
+     * @return boolean return the json
+     */
+    public boolean isJson() {
+        return json;
+    }
+
+    /**
+     * @return boolean return the invalidateSession
+     */
+    public boolean isInvalidateSession() {
+        return invalidateSession;
+    }
+
+    /**
+     * @param invalidateSession the invalidateSession to set
+     */
+    public void setInvalidateSession(boolean invalidateSession) {
+        this.invalidateSession = invalidateSession;
+    }
+
+    /**
+     * @return List<String> return the sessionToRemove
+     */
+    public List<String> getSessionToRemove() {
+        return sessionToRemove;
+    }
+
+    public ModelView removeSession(String key) {
+        this.sessionToRemove.add(key);
+        return this;
+    }
+
 }
