@@ -42,7 +42,7 @@ public class Emp {
         return this.sessions;
     }
 
-    @Url({ "/", "" })
+    @Url({ ".do", "" })
     public ModelView getAll() {
         ModelView modele = new ModelView("test.jsp");
         id++;
@@ -53,9 +53,9 @@ public class Emp {
         return modele;
     }
 
-    @Url({ "/index", "/ajouter" })
+    @Url({ "/index.do", "/ajouter.do" })
     public ModelView getDefaultPage(@ParamName("id") int id, @ParamName("name") String name) {
-        ModelView modele = new ModelView();
+        ModelView modele = new ModelView("test.jsp");
         Dept[] depts = new Dept[3];
         depts[0] = new Dept(1, "Tristesse");
         depts[1] = new Dept(2, "Désespoir");
@@ -68,7 +68,7 @@ public class Emp {
         return modele;
     }
 
-    @Url("/to-admin")
+    @Url("/to-admin.do")
     public ModelView toAdmin() {
         ModelView modele = new ModelView("toadmin.jsp");
         modele.addItem("identifiant", "Je suis identifié");
@@ -78,7 +78,7 @@ public class Emp {
         return modele;
     }
 
-    @Url("/admin")
+    @Url("/admin.do")
     @Auth("admin")
     public ModelView onlyForAdmin() {
         ModelView modele = new ModelView("admin.jsp");
@@ -87,7 +87,7 @@ public class Emp {
         return modele;
     }
 
-    @Url("/log-out")
+    @Url("/log-out.do")
     public ModelView logOut() {
         ModelView modele = new ModelView("test.jsp");
         modele.setInvalidateSession(true);

@@ -103,15 +103,16 @@ public final class PackageManager {
             NoSuchMethodException, InstantiationException, Exception {
         Method method = null;
         Object cl = getObjectFromMapping(mapping, mappingUrlsScope);
-        // Traitement des méthodes d'envois de données - Sprint 8
-        if (!request.getParameterMap().isEmpty() && request.getMethod().toLowerCase().equals("post")) {
-            sendDataToModel(request, cl);
-        }
 
         // Rendre null la classe singleton - Sprint 10
         Class<?> clazz = Class.forName(mapping.getClassName());
         if (mappingUrlsScope.containsKey(clazz)) {
             backToNull(cl);
+        }
+
+        // Traitement des méthodes d'envois de données - Sprint 8
+        if (!request.getParameterMap().isEmpty() && request.getMethod().toLowerCase().equals("post")) {
+            sendDataToModel(request, cl);
         }
         List<Method> methods = Arrays.asList(cl.getClass().getDeclaredMethods());
         method = methods.stream()

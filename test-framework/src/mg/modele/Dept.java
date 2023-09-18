@@ -36,7 +36,7 @@ public class Dept {
       this.nom = nom;
    }
 
-   @Url("/dept")
+   @Url("/dept.do")
    public ModelView showDept() {
       ModelView modelView = new ModelView("dept-test.jsp");
       id++;
@@ -44,7 +44,7 @@ public class Dept {
       return modelView;
    }
 
-   @Url("/dept-all")
+   @Url("/dept-all.do")
    public List<Dept> findAll() {
       Dept[] depts = new Dept[3];
       depts[0] = new Dept(1, "Tristesse");

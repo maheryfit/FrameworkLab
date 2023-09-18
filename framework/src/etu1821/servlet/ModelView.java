@@ -8,7 +8,7 @@ public class ModelView {
     private String view;
     private HashMap<String, Object> data;
     private HashMap<String, Object> session;
-    private boolean json;
+    private boolean json = false;
     private boolean invalidateSession;
     private List<String> sessionToRemove = new ArrayList<>();
 
@@ -58,14 +58,12 @@ public class ModelView {
     }
 
     public ModelView(String view) {
-        setJson(false);
         setView(view);
         setData(new HashMap<>());
         setSession(new HashMap<>());
     }
 
     public ModelView() {
-        setJson(true);
         setView("");
         setData(new HashMap<>());
         setSession(new HashMap<>());
